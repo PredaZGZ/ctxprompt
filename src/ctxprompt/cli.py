@@ -3,6 +3,7 @@ from pathlib import Path
 import typer
 
 from ctxprompt.detectors import detect_stack
+from ctxprompt.extractors import extract_file
 from ctxprompt.ranking import score_file
 from ctxprompt.scanner import scan_files
 
@@ -21,11 +22,13 @@ def main(
     files = scan_files(root)
     stack = detect_stack(root)
 
-    ranked_files = sorted(
-        files,
-        key=lambda file_path: score_file(file_path, root),
-        reverse=True,
-    )
+    extracted = []
+    for file_path in files:
+        priority = score_file(file_path, root)
+        info = extract_file(file_path, root, priority)
+        extracted.append(info)
+
+    extracted.sort(key=lambda item: item.priority, reverse=True)
 
     print(f"Project root: {root}")
     print(f"Files detected: {len(files)}")
@@ -39,26 +42,15 @@ def main(
     print(stack["package_managers"])
     print()
 
-    if stack["entrypoints"]:
-        print("Entrypoints:")
-        print(stack["entrypoints"])
-        print()
-
-    if stack["run_commands"]:
-        print("Run commands:")
-        print(stack["run_commands"])
-        print()
-
-    if stack["test_commands"]:
-        print("Test commands:")
-        print(stack["test_commands"])
-        print()
-
     print("Top ranked files:")
-    for file_path in ranked_files[:10]:
-        rel = file_path.relative_to(root)
-        score = score_file(file_path, root)
-        print(f"{score:>3}  {rel}")
+    for file_info in extracted[:10]:
+        print(f"{file_info.priority:>3}  {file_info.rel_path}")
+        if file_info.symbols:
+            names = ", ".join(symbol.name for symbol in file_info.symbols[:8])
+            print(f"     symbols: {names}")
+        if file_info.imports:
+            names = ", ".join(file_info.imports[:8])
+            print(f"     imports: {names}")
 
 
 if __name__ == "__main__":
