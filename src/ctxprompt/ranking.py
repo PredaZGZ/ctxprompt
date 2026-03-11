@@ -61,6 +61,27 @@ def score_file(path: Path, root: Path) -> int:
         score += 6
 
     if name == "readme.md" and depth > 1:
-        score -= 20
+        score -= 35
+
+    if name == "package.json" and depth <= 2:
+        score += 10
+
+    if name in {"docker-compose.yml", "docker-compose.yaml"}:
+        score += 10
+
+    if name == "schema.prisma":
+        score += 8
+
+    if rel.endswith("/src/app.ts") or rel.endswith("/src/server.ts") or rel.endswith("/src/main.ts"):
+        score += 20
+
+    if rel.endswith("/src/main.tsx") or rel.endswith("/src/app.tsx"):
+        score += 20
+
+    if "/routes/" in rel or "/controllers/" in rel or "/services/" in rel:
+        score += 12
+
+    if "/pages/" in rel or "/components/" in rel:
+        score += 8
 
     return score

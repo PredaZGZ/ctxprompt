@@ -11,11 +11,18 @@ IMPORT_PATTERNS = [
 
 SYMBOL_PATTERNS = [
     ("class", re.compile(r'^\s*export\s+class\s+([A-Za-z_][A-Za-z0-9_]*)', re.MULTILINE)),
+    ("class", re.compile(r'^\s*class\s+([A-Za-z_][A-Za-z0-9_]*)', re.MULTILINE)),
     ("function", re.compile(r'^\s*export\s+function\s+([A-Za-z_][A-Za-z0-9_]*)', re.MULTILINE)),
+    ("function", re.compile(r'^\s*export\s+default\s+function\s+([A-Za-z_][A-Za-z0-9_]*)', re.MULTILINE)),
     ("function", re.compile(r'^\s*function\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(', re.MULTILINE)),
-    ("const", re.compile(r'^\s*const\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*\(', re.MULTILINE)),
+    ("const", re.compile(r'^\s*export\s+const\s+([A-Za-z_][A-Za-z0-9_]*)\s*=', re.MULTILINE)),
+    ("const", re.compile(r'^\s*const\s+([A-Za-z_][A-Za-z0-9_]*)\s*=', re.MULTILINE)),
 ]
 
+ROUTE_PATTERNS = [
+    re.compile(r'\brouter\.(get|post|put|patch|delete)\s*\(\s*[\'"]([^\'"]+)[\'"]'),
+    re.compile(r'\bapp\.(get|post|put|patch|delete)\s*\(\s*[\'"]([^\'"]+)[\'"]'),
+]
 
 def detect_language(path: Path) -> str:
     suffix = path.suffix.lower()
@@ -47,6 +54,17 @@ def extract_node_file(path: Path, root: Path, priority: int) -> FileInfo:
                 continue
             seen.add(key)
             symbols.append(SymbolInfo(name=match, kind=kind))
+
+    for pattern in ROUTE_PATTERNS:
+        for method, route in pattern.findall(content):
+            symbols.append(
+                SymbolInfo(
+                    name=f"{method.upper()} {route}",
+                    kind="route",
+                )
+            )
+
+    
 
     return FileInfo(
         path=path,
