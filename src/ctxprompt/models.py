@@ -1,6 +1,7 @@
+from enum import Enum
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 
 
 @dataclass
@@ -38,3 +39,31 @@ class SubprojectInfo:
     test_commands: list[str] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
     manifests: list[str] = field(default_factory=list)
+
+class FactCategory(str, Enum):
+    LIBRARY = "library"
+    ENDPOINT = "endpoint"
+    COMPONENT = "component"
+    ROUTE = "route"
+    JOB = "job"
+    DATABASE = "database"
+    SCHEMA_MODEL = "schema_model"
+
+@dataclass
+class ExtractedFact:
+    category: FactCategory
+    name: str
+    source: Path
+    detail: Optional[str] = None
+
+
+@dataclass
+class SubprojectFacts:
+    name: str
+    facts: List[ExtractedFact] = field(default_factory=list)
+
+    def add(self, fact: ExtractedFact):
+        self.facts.append(fact)
+
+    def by_category(self, category: FactCategory) -> List[ExtractedFact]:
+        return [f for f in self.facts if f.category == category]

@@ -26,6 +26,38 @@ def _detect_node_project(project_root: Path, rel_path: str) -> SubprojectInfo | 
     scripts = data.get("scripts", {})
     deps = set(data.get("dependencies", {})) | set(data.get("devDependencies", {}))
 
+    interesting_libs = {
+        "express",
+        "react",
+        "vite",
+        "next",
+        "@nestjs/core",
+        "fastify",
+        "koa",
+        "prisma",
+        "@prisma/client",
+        "mongoose",
+        "typeorm",
+        "sequelize",
+        "zod",
+        "joi",
+        "jsonwebtoken",
+        "redis",
+        "bull",
+        "bullmq",
+        "node-cron",
+        "axios",
+        "zustand",
+        "@tanstack/react-query",
+        "redux",
+        "tailwindcss",
+    }
+
+    detected_libs = sorted(dep for dep in deps if dep in interesting_libs)
+
+    if detected_libs:
+        info.notes.append("libs=" + ",".join(detected_libs))
+
     if (project_root / "pnpm-lock.yaml").exists():
         info.package_managers.append("pnpm")
     elif (project_root / "yarn.lock").exists():
@@ -186,3 +218,44 @@ def summarize_repo_stack(subprojects: list[SubprojectInfo]) -> dict:
         "package_managers": list(dict.fromkeys(package_managers)),
         "notes": list(dict.fromkeys(notes)),
     }
+
+def detect_node_libraries(package_json_path: Path) -> list[str]:
+    try:
+        data = json.loads(package_json_path.read_text())
+
+        deps = data.get("dependencies", {})
+        dev_deps = data.get("devDependencies", {})
+
+        libraries = set(deps.keys()) | set(dev_deps.keys())
+
+        interesting = {
+            "express",
+            "react",
+            "vite",
+            "next",
+            "nestjs",
+            "fastify",
+            "koa",
+            "prisma",
+            "mongoose",
+            "typeorm",
+            "sequelize",
+            "zod",
+            "joi",
+            "jsonwebtoken",
+            "redis",
+            "bull",
+            "bullmq",
+            "node-cron",
+            "axios",
+            "zustand",
+            "@tanstack/react-query",
+            "redux",
+            "tailwindcss",
+        }
+
+        return sorted(lib for lib in libraries if lib in interesting)
+
+    except Exception:
+        return []
+
