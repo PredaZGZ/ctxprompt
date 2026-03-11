@@ -4,6 +4,7 @@ import typer
 
 from ctxprompt.detectors import detect_stack
 from ctxprompt.extractors import extract_file
+from ctxprompt.prompt_builder import build_prompt
 from ctxprompt.ranking import score_file
 from ctxprompt.scanner import scan_files
 
@@ -19,6 +20,9 @@ def main(
     if not root.exists():
         raise typer.BadParameter(f"Path does not exist: {root}")
 
+    if not root.is_dir():
+        raise typer.BadParameter(f"Path is not a directory: {root}")
+
     files = scan_files(root)
     stack = detect_stack(root)
 
@@ -30,27 +34,8 @@ def main(
 
     extracted.sort(key=lambda item: item.priority, reverse=True)
 
-    print(f"Project root: {root}")
-    print(f"Files detected: {len(files)}")
-    print()
-
-    print("Stack detected:")
-    print(stack["stacks"])
-    print()
-
-    print("Package managers:")
-    print(stack["package_managers"])
-    print()
-
-    print("Top ranked files:")
-    for file_info in extracted[:10]:
-        print(f"{file_info.priority:>3}  {file_info.rel_path}")
-        if file_info.symbols:
-            names = ", ".join(symbol.name for symbol in file_info.symbols[:8])
-            print(f"     symbols: {names}")
-        if file_info.imports:
-            names = ", ".join(file_info.imports[:8])
-            print(f"     imports: {names}")
+    prompt = build_prompt(root, stack, extracted[:20])
+    print(prompt)
 
 
 if __name__ == "__main__":
