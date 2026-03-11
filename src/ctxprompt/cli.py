@@ -14,6 +14,7 @@ app = typer.Typer()
 @app.command()
 def main(
     path: str = typer.Argument(".", help="Path to project root"),
+    output: str | None = typer.Option(None, "--output", "-o", help="Write prompt to a file"),
 ) -> None:
     root = Path(path).resolve()
 
@@ -35,6 +36,13 @@ def main(
     extracted.sort(key=lambda item: item.priority, reverse=True)
 
     prompt = build_prompt(root, stack, extracted[:20])
+
+    if output:
+        output_path = Path(output).resolve()
+        output_path.write_text(prompt, encoding="utf-8")
+        print(f"Prompt written to: {output_path}")
+        return
+
     print(prompt)
 
 
