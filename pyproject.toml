@@ -1,0 +1,26 @@
+[project]
+name = "ctxprompt"
+version = "0.1.0"
+description = "CLI to generate repository context prompts for LLM workflows"
+readme = "README.md"
+authors = [
+    { name = "Preda", email = "predaomfg@gmail.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "rich>=14.3.3",
+    "typer>=0.24.1",
+]
+
+[project.scripts]
+ctxprompt = "ctxprompt.cli:app"
+
+[build-system]
+requires = ["uv_build>=0.10.9,<0.11.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+    "ruff>=0.15.5",
+]
