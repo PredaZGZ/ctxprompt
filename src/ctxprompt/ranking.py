@@ -23,9 +23,18 @@ KEY_FILENAMES = {
 
 def score_file(path: Path, root: Path) -> int:
     name = path.name.lower()
-    rel = str(path.relative_to(root)).lower()
+    rel_path = path.relative_to(root)
+    rel = str(rel_path).lower()
+    depth = len(rel_path.parts)
 
     score = KEY_FILENAMES.get(name, 10)
+
+    if depth == 1:
+        score += 20
+    elif depth == 2:
+        score += 10
+    else:
+        score -= min(depth * 2, 12)
 
     if rel.startswith("src/"):
         score += 10
@@ -48,5 +57,10 @@ def score_file(path: Path, root: Path) -> int:
         score += 4
     elif rel.endswith(".json"):
         score += 4
+    elif rel.endswith(".prisma"):
+        score += 6
+
+    if name == "readme.md" and depth > 1:
+        score -= 20
 
     return score

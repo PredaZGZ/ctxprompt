@@ -42,7 +42,12 @@ EXCLUDED_EXTS = {
 }
 
 
-def should_ignore(path: Path, root: Path) -> bool:
+def should_ignore_dir(path: Path, root: Path) -> bool:
+    rel_parts = path.relative_to(root).parts
+    return any(part in EXCLUDED_DIRS for part in rel_parts)
+
+
+def should_ignore_file(path: Path, root: Path) -> bool:
     rel_parts = path.relative_to(root).parts
 
     if any(part in EXCLUDED_DIRS for part in rel_parts):

@@ -1,9 +1,14 @@
 from pathlib import Path
 
-from ctxprompt.models import FileInfo
+from ctxprompt.models import FileInfo, SubprojectInfo
 
 
-def build_prompt(root: Path, stack_info: dict, key_files: list[FileInfo]) -> str:
+def build_prompt(
+    root: Path,
+    stack_info: dict,
+    subprojects: list[SubprojectInfo],
+    key_files: list[FileInfo],
+) -> str:
     lines: list[str] = []
 
     lines.append("[PROJECT CONTEXT]")
@@ -17,20 +22,27 @@ def build_prompt(root: Path, stack_info: dict, key_files: list[FileInfo]) -> str
     lines.append(
         f"Package managers: {', '.join(stack_info['package_managers']) if stack_info['package_managers'] else 'unknown'}"
     )
-
-    if stack_info["entrypoints"]:
-        lines.append(f"Entrypoints: {', '.join(stack_info['entrypoints'])}")
-
-    if stack_info["run_commands"]:
-        lines.append(f"Run commands: {', '.join(stack_info['run_commands'])}")
-
-    if stack_info["test_commands"]:
-        lines.append(f"Test commands: {', '.join(stack_info['test_commands'])}")
-
     if stack_info["notes"]:
         lines.append(f"Notes: {'; '.join(stack_info['notes'])}")
-
     lines.append("")
+
+    if subprojects:
+        lines.append("[SUBPROJECTS]")
+        for subproject in subprojects:
+            lines.append(f"- {subproject.rel_path}")
+            lines.append(f"  stacks: {', '.join(subproject.stacks) if subproject.stacks else 'unknown'}")
+            lines.append(
+                f"  package managers: {', '.join(subproject.package_managers) if subproject.package_managers else 'unknown'}"
+            )
+            if subproject.entrypoints:
+                lines.append(f"  entrypoints: {', '.join(subproject.entrypoints)}")
+            if subproject.run_commands:
+                lines.append(f"  run commands: {', '.join(subproject.run_commands)}")
+            if subproject.test_commands:
+                lines.append(f"  test commands: {', '.join(subproject.test_commands)}")
+            if subproject.notes:
+                lines.append(f"  notes: {'; '.join(subproject.notes)}")
+        lines.append("")
 
     lines.append("[KEY FILES]")
     for file_info in key_files[:12]:
@@ -58,8 +70,9 @@ def build_prompt(root: Path, stack_info: dict, key_files: list[FileInfo]) -> str
 
     lines.append("[INSTRUCTION]")
     lines.append(
-        "Use this context to understand the repository structure, important files, symbols, "
-        "and execution setup. Reference file paths explicitly when explaining the project or proposing changes."
+        "Use this context to understand the repository structure, subprojects, important files, "
+        "symbols, and execution setup. Reference file paths explicitly when explaining the project "
+        "or proposing changes."
     )
 
     return "\n".join(lines)

@@ -1,11 +1,12 @@
 from pathlib import Path
 
-from ctxprompt.models import FileInfo
+from ctxprompt.extractors.node_extractor import extract_node_file
 from ctxprompt.extractors.python_extractor import extract_python_file
+from ctxprompt.models import FileInfo
 
 
 DOC_SUFFIXES = {".md", ".txt", ".rst"}
-CONFIG_SUFFIXES = {".toml", ".json", ".yaml", ".yml", ".ini", ".cfg", ".env"}
+CONFIG_SUFFIXES = {".toml", ".json", ".yaml", ".yml", ".ini", ".cfg", ".env", ".prisma"}
 
 
 def extract_file(path: Path, root: Path, priority: int) -> FileInfo:
@@ -13,6 +14,9 @@ def extract_file(path: Path, root: Path, priority: int) -> FileInfo:
 
     if suffix == ".py":
         return extract_python_file(path, root, priority)
+
+    if suffix in {".js", ".jsx", ".ts", ".tsx"}:
+        return extract_node_file(path, root, priority)
 
     content = path.read_text(encoding="utf-8", errors="ignore")
 
@@ -26,7 +30,7 @@ def extract_file(path: Path, root: Path, priority: int) -> FileInfo:
         ".env.example",
     }:
         file_type = "config"
-        language = suffix.lstrip(".") if suffix else "config"
+        language = "prisma" if suffix == ".prisma" else (suffix.lstrip(".") if suffix else "config")
     else:
         file_type = "text"
         language = "text"

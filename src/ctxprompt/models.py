@@ -25,3 +25,16 @@ class FileInfo:
     symbols: list[SymbolInfo] = field(default_factory=list)
     content_preview: str = ""
     summary: Optional[str] = None
+
+
+@dataclass
+class SubprojectInfo:
+    root: Path
+    rel_path: str
+    stacks: list[str] = field(default_factory=list)
+    package_managers: list[str] = field(default_factory=list)
+    entrypoints: list[str] = field(default_factory=list)
+    run_commands: list[str] = field(default_factory=list)
+    test_commands: list[str] = field(default_factory=list)
+    notes: list[str] = field(default_factory=list)
+    manifests: list[str] = field(default_factory=list)

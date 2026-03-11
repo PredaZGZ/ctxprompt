@@ -2,7 +2,7 @@ from pathlib import Path
 
 import typer
 
-from ctxprompt.detectors import detect_stack
+from ctxprompt.detectors import detect_subprojects, summarize_repo_stack
 from ctxprompt.extractors import extract_file
 from ctxprompt.prompt_builder import build_prompt
 from ctxprompt.ranking import score_file
@@ -25,7 +25,8 @@ def main(
         raise typer.BadParameter(f"Path is not a directory: {root}")
 
     files = scan_files(root)
-    stack = detect_stack(root)
+    subprojects = detect_subprojects(root, files)
+    stack = summarize_repo_stack(subprojects)
 
     extracted = []
     for file_path in files:
@@ -35,7 +36,7 @@ def main(
 
     extracted.sort(key=lambda item: item.priority, reverse=True)
 
-    prompt = build_prompt(root, stack, extracted[:20])
+    prompt = build_prompt(root, stack, subprojects, extracted[:20])
 
     if output:
         output_path = Path(output).resolve()
