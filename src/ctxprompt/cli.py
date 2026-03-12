@@ -36,7 +36,7 @@ def main(
 
     extracted.sort(key=lambda item: item.priority, reverse=True)
 
-    prompt = build_prompt(root, stack, subprojects, extracted[:20])
+    prompt = build_prompt(root, stack, subprojects, extracted)
 
     if output:
         output_path = Path(output).resolve()
