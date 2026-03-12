@@ -26,9 +26,13 @@ def build_prompt(
         lines.append(f"Notes: {'; '.join(stack_info['notes'])}")
     lines.append("")
 
-    if subprojects:
+    display_subprojects = subprojects
+    if len(subprojects) == 1 and subprojects[0].rel_path == ".":
+        display_subprojects = []
+
+    if display_subprojects:
         lines.append("[SUBPROJECTS]")
-        for subproject in subprojects:
+        for subproject in display_subprojects:
             lines.append(f"- {subproject.rel_path}")
             lines.append(
                 f"  stacks: {', '.join(subproject.stacks) if subproject.stacks else 'unknown'}"
