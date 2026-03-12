@@ -56,4 +56,7 @@ def should_ignore_file(path: Path, root: Path) -> bool:
     if path.suffix.lower() in EXCLUDED_EXTS:
         return True
 
+    if path.name == "__init__.py":
+        return True
+
     return False

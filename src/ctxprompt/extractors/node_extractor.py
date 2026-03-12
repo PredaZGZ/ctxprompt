@@ -19,10 +19,13 @@ SYMBOL_PATTERNS = [
     ("const", re.compile(r'^\s*const\s+([A-Za-z_][A-Za-z0-9_]*)\s*=', re.MULTILINE)),
 ]
 
-ROUTE_PATTERNS = [
-    re.compile(r'\brouter\.(get|post|put|patch|delete)\s*\(\s*[\'"]([^\'"]+)[\'"]'),
-    re.compile(r'\bapp\.(get|post|put|patch|delete)\s*\(\s*[\'"]([^\'"]+)[\'"]'),
-]
+ROUTE_PATTERN = re.compile(
+    r'\b(app|router)\.(get|post|put|patch|delete)\s*\(\s*[\'"`]([^\'"`]+)[\'"`]'
+)
+
+MOUNT_PATTERN = re.compile(
+    r'\bapp\.use\s*\(\s*[\'"`]([^\'"`]+)[\'"`]\s*,\s*([A-Za-z0-9_]+)'
+)
 
 def detect_language(path: Path) -> str:
     suffix = path.suffix.lower()
@@ -55,15 +58,24 @@ def extract_node_file(path: Path, root: Path, priority: int) -> FileInfo:
             seen.add(key)
             symbols.append(SymbolInfo(name=match, kind=kind))
 
-    for pattern in ROUTE_PATTERNS:
-        for method, route in pattern.findall(content):
-            symbols.append(
-                SymbolInfo(
-                    name=f"{method.upper()} {route}",
-                    kind="route",
-                )
-            )
+    for match in ROUTE_PATTERN.finditer(content):
+        method = match.group(2).upper()
+        route = match.group(3)
 
+        symbols.append(
+            SymbolInfo(
+                name=f"{method} {route}",
+                kind="route",
+            )
+        )
+
+    for prefix, router in MOUNT_PATTERN.findall(content):
+        symbols.append(
+            SymbolInfo(
+                name=f"{prefix} -> {router}",
+                kind="router_mount",
+            )
+        )
     
 
     return FileInfo(

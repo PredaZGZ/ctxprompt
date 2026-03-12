@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "CLI to generate repository context prompts for LLM workflows"
 readme = "README.md"
 authors = [
-    { name = "Preda", email = "predaomfg@gmail.com" }
+    { name = "Preda"}
 ]
 requires-python = ">=3.11"
 dependencies = [

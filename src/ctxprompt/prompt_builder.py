@@ -30,7 +30,9 @@ def build_prompt(
         lines.append("[SUBPROJECTS]")
         for subproject in subprojects:
             lines.append(f"- {subproject.rel_path}")
-            lines.append(f"  stacks: {', '.join(subproject.stacks) if subproject.stacks else 'unknown'}")
+            lines.append(
+                f"  stacks: {', '.join(subproject.stacks) if subproject.stacks else 'unknown'}"
+            )
             lines.append(
                 f"  package managers: {', '.join(subproject.package_managers) if subproject.package_managers else 'unknown'}"
             )
@@ -45,12 +47,21 @@ def build_prompt(
         lines.append("")
 
     lines.append("[KEY FILES]")
-    for file_info in key_files[:12]:
-        lines.append(f"- {file_info.rel_path} [{file_info.language}] priority={file_info.priority}")
+    for file_info in key_files:
+        lines.append(f"- {file_info.rel_path} priority={file_info.priority}")
 
-        if file_info.symbols:
-            symbol_names = ", ".join(symbol.name for symbol in file_info.symbols[:8])
-            lines.append(f"  symbols: {symbol_names}")
+        routes = [s.name for s in file_info.symbols if s.kind == "route"]
+        mounts = [s.name for s in file_info.symbols if s.kind == "router_mount"]
+        others = [s.name for s in file_info.symbols if s.kind not in ("route", "router_mount")]
+
+        if routes:
+            lines.append(f"  routes: {', '.join(routes[:20])}")
+
+        if mounts:
+            lines.append(f"  routers: {', '.join(mounts[:20])}")
+
+        if others:
+            lines.append(f"  symbols: {', '.join(others[:10])}")
 
         if file_info.imports:
             import_names = ", ".join(file_info.imports[:8])
@@ -58,21 +69,34 @@ def build_prompt(
 
     lines.append("")
 
-    lines.append("[IMPORTANT SNIPPETS]")
-    for file_info in key_files[:5]:
-        preview = file_info.content_preview.strip()
-        if not preview:
-            continue
-
-        lines.append(f"--- FILE: {file_info.rel_path} ---")
-        lines.append(preview)
-        lines.append("")
+    # lines.append("[IMPORTANT SNIPPETS]")
+    # for file_info in key_files[:5]:
+    #     preview = file_info.content_preview.strip()
+    #     if not preview:
+    #         continue
+    # 
+    #     lines.append(f"--- FILE: {file_info.rel_path} ---")
+    #     lines.append(preview)
+    #     lines.append("")
 
     lines.append("[INSTRUCTION]")
+    
+    has_api = any(
+        s.kind in ("route", "router_mount") for f in key_files for s in f.symbols
+    ) or any(
+        api_kw in " ".join(stack_info.get("stacks", [])).lower()
+        for api_kw in ("fastapi", "flask", "django", "express", "nest", "spring", "actix", "axum")
+    )
+
+    if has_api:
+        api_msg = "This repository contains an API. Use the context to understand the API routes, routers, key symbols, and backend behavior."
+    else:
+        api_msg = "Use this context to understand the repository structure, key symbols, and execution setup."
+
     lines.append(
-        "Use this context to understand the repository structure, subprojects, important files, "
-        "symbols, and execution setup. Reference file paths explicitly when explaining the project "
-        "or proposing changes."
+        f"{api_msg} IMPORTANT: This is PURE CONTEXT. Do not hallucinate file contents or implementations. "
+        "If you have any doubts or need the code of a specific file or function to answer the user's prompt, "
+        "STOP and ask the user to provide that file or function first."
     )
 
     return "\n".join(lines)
