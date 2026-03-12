@@ -38,13 +38,25 @@ def main(
 
     prompt = build_prompt(root, stack, subprojects, extracted)
 
+    try:
+        import pyperclip
+        pyperclip.copy(prompt)
+        copied = True
+    except Exception:
+        copied = False
+
     if output:
         output_path = Path(output).resolve()
         output_path.write_text(prompt, encoding="utf-8")
-        print(f"Prompt written to: {output_path}")
+        msg = f"Prompt written to: {output_path}"
+        if copied:
+            msg += " (and copied to clipboard)"
+        print(msg)
         return
 
     print(prompt)
+    if copied:
+        print("\n[+] Prompt copied to clipboard automatically!")
 
 
 if __name__ == "__main__":
